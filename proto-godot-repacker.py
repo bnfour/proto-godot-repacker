@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# scuffed tool, usage is limited, please please read
+# https://github.com/bnfour/proto-godot-repacker
+
 import argparse
 import io
 import hashlib
@@ -8,6 +11,8 @@ import os
 import struct
 import sys
 import typing
+
+# region helper classes
 
 class TypedConfigNamespace(object):
     """Helper class that wraps parsed arguments as implicit typed things,
@@ -23,6 +28,8 @@ class ReplaceFileOptions(typing.NamedTuple):
     size: int
     # md5 hash that is stored directly after offset and size
     hash_offset: int
+
+#endregion
 
 #region argument parsing
 
