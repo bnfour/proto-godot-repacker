@@ -47,7 +47,7 @@ As an advice, mind the files: images I replaced were referred as and named as PN
 You can use https://github.com/tehskai/godot-unpacker to get original resources.
 
 ## Credits
-This project is pretty much inspired by https://github.com/tehskai/godot-unpacker. It's source taught me ~~a lot~~ just enough about Godot resources.
+This project is pretty much inspired by https://github.com/tehskai/godot-unpacker. Its source taught me ~~a lot~~ just enough about Godot resources.
 
 Shoutout for Devcats' Sudocats for getting me interested in replacing resources in the first place (see quote at the top).
 
