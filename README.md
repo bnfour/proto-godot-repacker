@@ -30,7 +30,7 @@ usage: proto-godot-repacker.py [-h] resfile replacements_folder
 Allegedly working repacker for Godot resources, in a very blunt way.
 
 positional arguments:
-  resfile              Godot resource pack (.pck) or self-contained executable to patch
+  resfile              Godot resource pack (.pck) or self-contained executable to patch IN-PLACE, remember to backup
   replacements_folder  folder that holds replacement assets
 
 options:

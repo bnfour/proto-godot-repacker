@@ -37,7 +37,7 @@ def get_args() -> TypedConfigNamespace:
     parser = argparse.ArgumentParser(description="Allegedly working repacker for Godot resources, in a very blunt way.",
         epilog="Limitations exist, check the docs!")
     
-    parser.add_argument("resfile", type=argparse.FileType("rb+"), help="Godot resource pack (.pck) or self-contained executable to patch")
+    parser.add_argument("resfile", type=argparse.FileType("rb+"), help="Godot resource pack (.pck) or self-contained executable to patch IN-PLACE, remember to backup")
     parser.add_argument("replacements_folder", type=dir_type, help="folder that holds replacement assets")
 
     return TypedConfigNamespace(parser.parse_args())
@@ -57,13 +57,10 @@ def dir_type(path: str) -> str:
 def is_godot_resource(f: mmap.mmap) -> bool:
     magic = b"GDPC"
     if f.read(4) == magic:
-        f.seek(0)
         return True
     else:
         f.seek(-4, os.SEEK_END)
-        if f.read(4) == magic:
-            return True
-        return False
+        return f.read(4) == magic
 
 def try_to_find_resource(f: mmap.mmap, name: str) -> ReplaceFileOptions | None:
     to_search = b"res://.import/" + str.encode(name, "ascii")
