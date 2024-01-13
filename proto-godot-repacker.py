@@ -4,7 +4,9 @@ import argparse
 import io
 import mmap
 import os
+import struct
 import sys
+import typing
 
 class TypedConfigNamespace(object):
     """Helper class that wraps parsed arguments as implicit typed things,
@@ -12,6 +14,16 @@ class TypedConfigNamespace(object):
     def __init__(self, raw_args: argparse.Namespace) -> None:
         self.resfile: io.IOBase = raw_args.resfile
         self.replacements_folder: str = raw_args.replacements_folder
+
+class ReplaceFileOptions(typing.NamedTuple):
+    """Things we need to know about a resource in the file to replace it"""
+    # actual file contents
+    offset: int
+    size: int
+    # md5 hash that is stored directly after offset and size
+    hash_offset: int
+
+#region argument parsing
 
 def get_args() -> TypedConfigNamespace:
     parser = argparse.ArgumentParser(description="Allegedly working repacker for Godot resources, in a very blunt way.",
@@ -30,6 +42,8 @@ def dir_type(path: str) -> str:
     else:
         raise argparse.ArgumentTypeError(f"{path} is not a valid folder name")
 
+#endregion
+
 def is_godot_resource(f: mmap.mmap) -> bool:
     magic = b"GDPC"
     if f.read(4) == magic:
@@ -40,6 +54,24 @@ def is_godot_resource(f: mmap.mmap) -> bool:
         if f.read(4) == magic:
             return True
         return False
+
+def try_to_find_resource(f: mmap.mmap, name: str) -> ReplaceFileOptions | None:
+    to_search = b"res://.import/" + str.encode(name, "ascii")
+    # we assume (incorrectly? works for me) that the first time file is mentioned, it's its header and not some import script
+    index = f.find(to_search, 0)
+    
+    if index == -1:
+        return None
+    
+    f.seek(index - 4)
+    # determine the file name length to skip
+    name_len = int.from_bytes(f.read(4), "little")
+    f.seek(index + name_len)
+    
+    offset, size = struct.unpack_from("<QQ", f.read(8 + 8))
+    md5_offset = f.tell()
+
+    return ReplaceFileOptions(offset, size, md5_offset)
 
 
 def main(config: TypedConfigNamespace):
@@ -54,8 +86,11 @@ def main(config: TypedConfigNamespace):
 
     replacements = (asset for asset in os.listdir(config.replacements_folder) if os.path.isfile(os.path.join(config.replacements_folder, asset)))
     for file in replacements:
-        print(f"Replacing of {file} goes here")
-        # TODO rapid action
+        options = try_to_find_resource(f, file)
+        if options is not None:
+            print(f"{file}: found at 0x{options.offset:x}, size 0x{options.size:x}, md5 at 0x{options.hash_offset:x}")
+        else:
+            print(f"{file}: not found in file, skipping.")
 
     f.close()
 
